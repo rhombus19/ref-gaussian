@@ -1,0 +1,59 @@
+[project]
+name = "ref-gaussian"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "backend==0.2.4.1",
+    "cubemapencoder==0.0.0",
+    "dearpygui==1.11.1",
+    "imageio==2.35.1",
+    "kornia==0.7.3",
+    "matplotlib==3.7.5",
+    "mediapy==1.2.2",
+    "numpy==1.24.4",
+    "nvdiffrast==0.3.1",
+    "open3d==0.18.0",
+    "opencv_python",  #modified
+    "Pillow==11.1.0",
+    "plyfile==1.1",
+    "raytracing==0.1.0",
+    "scipy==1.15.1",
+    "setuptools==71.0.4",
+    "scikit-image",  #modified
+    "torch==2.0.0",  #modified
+    "torchvision==0.15.0",  #modified
+    "tqdm==4.66.2",
+    "trimesh==4.3.2",
+    "simple-knn",  #modified
+    "diff-surfel-rasterization",  #modified
+    "pyopengl>=3.1.10",
+    "glfw>=2.10.0",
+]
+
+
+[tool.uv.sources]
+simple-knn = { path = "submodules/simple-knn" }
+diff-surfel-rasterization = { path = "submodules/diff-surfel-rasterization" }
+cubemapencoder = { path = "submodules/cubemapencoder" }
+raytracing = { path = "submodules/raytracing" }
+nvdiffrast = { git="https://github.com/NVlabs/nvdiffrast.git"}
+torch = [{ index = "pytorch_cu117" }]
+torchvision = [{ index = "pytorch_cu117" }]
+
+[[tool.uv.index]]
+name = "pytorch_cu117"
+url = "https://download.pytorch.org/whl/cu117"
+explicit = true
+
+[tool.uv.extra-build-dependencies]
+      simple-knn = ["torch"]
+      diff-surfel-rasterization = ["torch"]
+      cubemapencoder = ["torch"]
+      raytracing = ["torch"]
+
+#Install LibEigen
+#
+#sudo apt-get update
+#sudo apt-get install libeigen3-dev

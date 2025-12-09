@@ -12,6 +12,7 @@
 import torch
 from torch import nn
 import numpy as np
+import math
 from utils.graphics_utils import getWorld2View2, getProjectionMatrix, getProjectionMatrixCorrect
 
 class Camera(nn.Module):
@@ -73,15 +74,37 @@ class Camera(nn.Module):
         self.T = torch.tensor(self.T, dtype=torch.float32, device='cuda')
 
 class MiniCam:
-    def __init__(self, width, height, fovy, fovx, znear, zfar, world_view_transform, full_proj_transform):
-        self.image_width = width
-        self.image_height = height    
-        self.FoVy = fovy
-        self.FoVx = fovx
-        self.znear = znear
-        self.zfar = zfar
+    def __init__(self, width, height, fovy, fovx, znear, zfar, world_view_transform, full_proj_transform, R=None, T=None, HWK=None):
+        self.image_width = int(width)
+        self.image_height = int(height)
+        self.FoVy = float(fovy)
+        self.FoVx = float(fovx)
+        self.znear = float(znear)
+        self.zfar = float(zfar)
         self.world_view_transform = world_view_transform
         self.full_proj_transform = full_proj_transform
+
         view_inv = torch.inverse(self.world_view_transform)
         self.camera_center = view_inv[3][:3]
 
+        # Provide fields expected by the renderer (HWK, R, T) even for synthetic cameras.
+        if R is None or T is None:
+            # Convert column-major matrix back to row-major for decomposition.
+            view_rm = self.world_view_transform.T.detach().cpu().numpy()
+            R_mat = view_rm[:3, :3]
+            T_vec = view_rm[:3, 3]
+        else:
+            R_mat = R
+            T_vec = T
+
+        if HWK is None:
+            fx = 0.5 * self.image_width / math.tan(self.FoVx * 0.5)
+            fy = 0.5 * self.image_height / math.tan(self.FoVy * 0.5)
+            cx = (self.image_width - 1) * 0.5
+            cy = (self.image_height - 1) * 0.5
+            K = np.array([[fx, 0.0, cx], [0.0, fy, cy], [0.0, 0.0, 1.0]], dtype=np.float32)
+            HWK = (self.image_height, self.image_width, K)
+
+        self.HWK = HWK
+        self.R = torch.tensor(R_mat, dtype=torch.float32, device="cuda")
+        self.T = torch.tensor(T_vec, dtype=torch.float32, device="cuda")
